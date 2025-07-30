@@ -1,0 +1,8 @@
+@font-face {
+    font-family: 'stranger-things';
+    src: url('assets/stranger-things.ttf') format('truetype');
+}
+
+body {
+    background: black;
+}

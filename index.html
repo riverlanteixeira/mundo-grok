@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Mundo Invertido AR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'stranger-things', sans-serif; }
+        #loading-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: black; display: flex; flex-direction: column; justify-content: center; align-items: center; color: red; z-index: 10; }
+        #progress-bar { width: 80%; height: 20px; background: #333; margin-top: 20px; }
+        #progress { width: 0%; height: 100%; background: red; }
+        #start-button { display: none; margin-top: 20px; padding: 10px 20px; background: red; color: black; border: none; font-size: 18px; cursor: pointer; }
+        #call-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9; }
+        #call-image { width: 80%; max-width: 300px; cursor: pointer; }
+        #arrow { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); font-size: 40px; color: red; display: none; }
+        #compass { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 20px; color: white; display: none; }
+    </style>
+    <link rel="stylesheet" href="styles.css"> <!-- Se criar um CSS separado -->
+</head>
+<body>
+    <div id="loading-screen">
+        <img src="assets/img/stranger-things-logo.png" alt="Stranger Things Logo" width="300">
+        <p>Carregando...</p>
+        <div id="progress-bar"><div id="progress"></div></div>
+        <button id="start-button" onclick="startGame()">Iniciar o Jogo</button>
+    </div>
+    <div id="call-screen">
+        <img id="call-image" src="assets/img/dustin-call.png" alt="Dustin Call" onclick="playIntroAudio()">
+    </div>
+    <div id="arrow">↑</div>
+    <div id="compass">N</div>
+    <a-scene embedded arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;">
+        <!-- Conteúdo AR futuro -->
+    </a-scene>
+    <script>
+        const assets = [
+            'assets/audio/dustin-intro.mp3',
+            // Adicione mais assets nas próximas etapas
+        ];
+        let loaded = 0;
+        const total = assets.length + 1;
+        function updateProgress() {
+            loaded++;
+            document.getElementById('progress').style.width = `${(loaded / total) * 100}%`;
+            if (loaded === total) {
+                document.querySelector('#loading-screen p').style.display = 'none';
+                document.getElementById('progress-bar').style.display = 'none';
+                document.getElementById('start-button').style.display = 'block';
+            }
+        }
+        assets.forEach(src => {
+            const asset = new Audio(src);
+            asset.onloadeddata = updateProgress;
+            asset.load();
+        });
+        updateProgress();
+
+        let currentPosition = null;
+        const targetPosition = { lat: -27.63985135643477, lng: -48.66777779450669 };
+        const tolerance = 10; // metros
+
+        function startGame() {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('call-screen').style.display = 'flex';
+        }
+
+        function playIntroAudio() {
+            const audio = new Audio('assets/audio/dustin-intro.mp3');
+            audio.play();
+            audio.onended = () => {
+                document.getElementById('call-screen').style.display = 'none';
+                startNavigation();
+            };
+        }
+
+        function startNavigation() {
+            document.getElementById('arrow').style.display = 'block';
+            document.getElementById('compass').style.display = 'block';
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(updatePosition, handleGeoError, { enableHighAccuracy: true });
+            } else {
+                alert('Geolocalização não suportada.');
+            }
+        }
+
+        function updatePosition(position) {
+            currentPosition = { lat: position.coords.latitude, lng: position.coords.longitude };
+            const distance = calculateDistance(currentPosition, targetPosition);
+            if (distance <= tolerance) {
+                navigator.vibrate([200, 100, 200]);
+                document.getElementById('arrow').style.display = 'none';
+                alert('Você chegou à Floresta das Trevas! (Placeholder para Missão 1)');
+            } else {
+                const bearing = calculateBearing(currentPosition, targetPosition);
+                document.getElementById('arrow').style.transform = `translateX(-50%) rotate(${bearing}deg)`;
+                document.getElementById('compass').innerText = `Distância: ${distance.toFixed(0)}m`;
+            }
+        }
+
+        function handleGeoError(error) {
+            alert('Erro na geolocalização: ' + error.message);
+        }
+
+        function calculateDistance(pos1, pos2) {
+            const R = 6371000; // Raio da Terra em metros
+            const dLat = (pos2.lat - pos1.lat) * Math.PI / 180;
+            const dLng = (pos2.lng - pos1.lng) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(pos1.lat * Math.PI / 180) * Math.cos(pos2.lat * Math.PI / 180) * Math.sin(dLng/2) * Math.sin(dLng/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function calculateBearing(pos1, pos2) {
+            const dLng = (pos2.lng - pos1.lng) * Math.PI / 180;
+            const y = Math.sin(dLng) * Math.cos(pos2.lat * Math.PI / 180);
+            const x = Math.cos(pos1.lat * Math.PI / 180) * Math.sin(pos2.lat * Math.PI / 180) - Math.sin(pos1.lat * Math.PI / 180) * Math.cos(pos2.lat * Math.PI / 180) * Math.cos(dLng);
+            return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+        }
+    </script>
+</body>
+</html>
