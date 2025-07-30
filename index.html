@@ -125,7 +125,7 @@
                 handleMissionArrival();
             } else {
                 const bearing = calculateBearing(currentPosition, mission.target);
-                const rotation = bearing - deviceHeading;
+                const rotation = (bearing - deviceHeading + 180) % 360;
                 document.getElementById('arrow').style.transform = `translateX(-50%) rotate(${rotation}deg)`;
                 document.getElementById('compass').innerText = `Distância: ${distance.toFixed(0)}m`;
             }
