@@ -5,7 +5,7 @@
     <title>Mundo Invertido AR</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
         body { margin: 0; overflow: hidden; font-family: 'stranger-things', sans-serif; }
         #loading-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: black; display: flex; flex-direction: column; justify-content: center; align-items: center; color: red; z-index: 10; }
@@ -14,7 +14,7 @@
         #start-button { display: none; margin-top: 20px; padding: 10px 20px; background: red; color: black; border: none; font-size: 18px; cursor: pointer; }
         #call-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9; }
         #call-image { width: 80%; max-width: 300px; cursor: pointer; }
-        #arrow { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); font-size: 40px; color: red; display: none; }
+        #arrow { position: absolute; top: 20px; left: 50%; transform: translateXs(-50%); font-size: 40px; color: red; display: none; }
         #compass { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 20px; color: white; display: none; }
         #ar-instruction { position: absolute; top: 50px; left: 50%; transform: translateX(-50%); color: white; display: none; }
     </style>
@@ -37,8 +37,8 @@
         <a-marker type="hiro" id="hiro-marker" style="display: none;">
             <a-image src="assets/gif/luzes-piscando.gif" width="1" height="1" position="0 0 0"></a-image>
         </a-marker>
-        <a-entity id="bicycle" gltf-model="assets/models/bicicleta-will.glb" scale="0.5 0.5 0.5" position="0 0 -2" visible="false" gesture-handler></a-entity>
-        <a-camera></a-camera>
+        <a-entity id="bicycle" gltf-model="assets/models/bicicleta-will.glb" scale="0.5 0.5 0.5" gps-entity-place="latitude: -27.63985135643477; longitude: -48.66777779450669;" visible="false"></a-entity>
+        <a-entity gps-camera rotation-reader></a-entity>
     </a-scene>
     <script>
         const assets = [
@@ -134,9 +134,10 @@
         function handleMissionArrival() {
             if (currentMission === 0) {
                 document.getElementById('ar-instruction').style.display = 'block';
-                document.getElementById('bicycle').visible = true;
-                document.getElementById('bicycle').addEventListener('click', () => {
-                    document.getElementById('bicycle').visible = false;
+                const bicycle = document.getElementById('bicycle');
+                bicycle.setAttribute('visible', 'true');
+                bicycle.addEventListener('click', function() {
+                    bicycle.setAttribute('visible', 'false');
                     document.getElementById('ar-instruction').style.display = 'none';
                     playMissionAudio(missions[0].audio, () => {
                         currentMission++;
